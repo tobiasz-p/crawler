@@ -23,12 +23,10 @@ async function myBackEndLogic() {
     while (page < 2){ // hasNextPage
         try {
             const body = await downloadPage('https://winnicalidla.pl/alkohole-mocne.html?p=' + page)
-            
+
             // console.log(html);
-    
             var $ = cheerio.load(body);
             // fs.appendFileSync('body.html', body);
-            
             
             hasNextPage = $('a.i-next').length > 0;
 
@@ -49,7 +47,9 @@ async function myBackEndLogic() {
         }
     }
     // console.log(links)
+    var products = new Array;
     for (let link of links) {
+        var product = new Array;
         var re = /..(?=%'\;)/
         console.log(link)
         const body = await downloadPage(link)
@@ -57,15 +57,21 @@ async function myBackEndLogic() {
         var $ = cheerio.load(body);
         var alcohol = $('div.alcohol ').find('style').html(); // find style of div.alcohol
         alcohol = alcohol.substr(alcohol.search(re), 2); // find regexp and get substring
+        var price = $('div.price-info').after('br').first().text().match(/[0-9]+,[0-9]{2}/)[0].replace(',', '.');
         // var capacity = $('div.capacity').html();
-        var price = $('div.price-info').after('br').first().text().match(/[0-9]+,[0-9]{2}/)[0];
-        var subPrice = $('span.sub-price').html();
-        console.log(alcohol);
-        console.log(price);
+        // var subPrice = $('span.sub-price').html();
+        // console.log(alcohol);
+        // console.log(price);
         // console.log(subPrice);
-        console.log(capacity.match(/[0-9]+/)[0]);
+        // console.log(capacity.match(/[0-9]+/)[0]);
+        
+        var pricePer100g = parseFloat(price) * 10 / parseFloat(alcohol);
+        // console.log(pricePer100g);
+        product.push(link, price, pricePer100g);
+        products.push(product);
     }
 
+    console.log(products);
 }
 
 // run your async function
