@@ -1,7 +1,5 @@
 var request = require('request');
-var fs = require('fs');
 var cheerio = require('cheerio');
-
 
 
 function downloadPage(url) {
@@ -12,31 +10,32 @@ function downloadPage(url) {
                 reject('Invalid status code <' + response.statusCode + '>');
             }
             resolve(body);
-    });
+        });
     });
 }
 
 
 function sortByKey(array, key) {
-    return array.sort(function(a, b) {
-        var x = a[key]; 
+    return array.sort(function (a, b) {
+        var x = a[key];
         var y = b[key];
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     });
 }
 
-async function myBackEndLogic() {
+
+async function getProducts() {
     var links = new Array();
     var page = 1;
     var hasNextPage = true;
-    while (hasNextPage){ // hasNextPage
+    while (hasNextPage) { // hasNextPage
         try {
             console.log("Getting products from page: " + page);
             const body = await downloadPage('https://winnicalidla.pl/alkohole-mocne.html?p=' + page)
             var $ = cheerio.load(body);
             hasNextPage = $('a.i-next').length > 0;
 
-            $('li.col-lg-12').each(function( index ) {
+            $('li.col-lg-12').each(function (index) {
                 var link = $(this).find('a').attr('href');
                 links.push(link);
             });
@@ -58,15 +57,14 @@ async function myBackEndLogic() {
         try {
             var alcohol = $('div.alcohol ').find('style').html(); // find style of div.alcohol
             alcohol = alcohol.substr(alcohol.search(re), 2).replace(',', '.'); // find regexp and get substring and replace ',' with '.'
-            console.log(alcohol);
             var price = $('div.price-info').after('br').first().text().match(/[0-9]+,[0-9]{2}/)[0].replace(',', '.');
             var name = $('h1.product-name').text();
         }
         catch (error) {
-        console.error('ERROR:');
-        console.error(error);
-        continue;
-    }   
+            console.error('ERROR:');
+            console.error(error);
+            continue;
+        }
         var pricePer100g = parseFloat(price) * 10 / parseFloat(alcohol);
         var product = {};
         product.name = name;
@@ -75,12 +73,9 @@ async function myBackEndLogic() {
         product.pricePer100g = parseFloat(pricePer100g.toFixed(2));
         products.push(product);
     }
-    sortByKey(products, 'pricePer100g')
-    console.log(products);
+    sortByKey(products, 'pricePer100g');
     return products;
-    // fs.appendFileSync('products.txt', products);
+
 }
 
-
-// run your async function
-myBackEndLogic();
+result = getProducts()
